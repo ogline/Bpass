@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Boarding Pass Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.3rem;
+        }
+        
+        .form-container {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        select:focus, input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        
+        .col {
+            flex: 1;
+            padding: 0 10px;
+            min-width: 200px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-pdf {
+            background: #e74c3c;
+        }
+        
+        .btn-pdf:hover {
+            background: #c0392b;
+        }
+        
+        .btn-reset {
+            background: #95a5a6;
+        }
+        
+        .btn-reset:hover {
+            background: #7f8c8d;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+        
+        .preview-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .preview-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .boarding-pass {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #005a9e, #0077b6);
+            color: white;
+        }
+        
+        .pass-header {
+            background: #2c3e50;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .airline-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .pass-content {
+            padding: 20px;
+        }
+        
+        .flight-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .airport {
+            text-align: center;
+        }
+        
+        .airport-code {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .passenger-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .barcode-section {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            margin: 0 -20px -20px -20px;
+        }
+        
+        #qrcode {
+            display: inline-block;
+            padding: 10px;
+            background: white;
+        }
+        
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+            
+            .col {
+                margin-bottom: 15px;
+            }
+            
+            .details-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PDF Boarding Pass Generator</h1>
+            <p class="subtitle">Generate printable boarding passes for Saudi Arabia to India flights</p>
+        </header>
+        
+        <div class="card">
+            <div class="card-header">
+                Flight Details
+            </div>
+            <div class="form-container">
+                <form id="flightForm">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="departure">Departure City (Saudi Arabia)</label>
+                                <select id="departure" required>
+                                    <option value="">Select departure city</option>
+                                    <option value="JED">Jeddah - King Abdulaziz (JED)</option>
+                                    <option value="RUH">Riyadh - King Khalid (RUH)</option>
+                                    <option value="DMM">Dammam - King Fahd (DMM)</option>
+                                    <option value="MED">Medina - Prince Mohammad Bin Abdulaziz (MED)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="arrival">Arrival City (India)</label>
+                                <select id="arrival" required>
+                                    <option value="">Select arrival city</option>
+                                    <option value="DEL">Delhi - Indira Gandhi (DEL)</option>
+                                    <option value="BOM">Mumbai - Chhatrapati Shivaji (BOM)</option>
+                                    <option value="BLR">Bangalore - Kempegowda (BLR)</option>
+                                    <option value="MAA">Chennai - Chennai International (MAA)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="airline">Airline</label>
+                                <select id="airline" required>
+                                    <option value="">Select airline</option>
+                                    <option value="SV">Saudia (SV)</option>
+                                    <option value="XY">Flynas (XY)</option>
+                                    <option value="6E">IndiGo (6E)</option>
+                                    <option value="AI">Air India (AI)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="flightNumber">Flight Number</label>
+                                <input type="text" id="flightNumber" placeholder="e.g., SV2501" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="departureDate">Departure Date</label>
+                                <input type="date" id="departureDate" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="departureTime">Departure Time</label>
+                                <input type="time" id="departureTime" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="passengerName">Passenger Name</label>
+                                <input type="text" id="passengerName" placeholder="Enter full name" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="seatNumber">Seat Number</label>
+                                <input type="text" id="seatNumber" placeholder="e.g., 12A" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="gate">Gate</label>
+                                <input type="text" id="gate" placeholder="e.g., B12" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="boardingTime">Boarding Time</label>
+                                <input type="time" id="boardingTime" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" class="btn" id="previewBtn">Preview Boarding Pass</button>
+                        <button type="button" class="btn btn-pdf" id="generatePdfBtn">Generate PDF</button>
+                        <button type="reset" class="btn btn-reset" id="resetBtn">Reset Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="preview-header">
+                <h2>Boarding Pass Preview</h2>
+                <p>Review your boarding pass before generating PDF</p>
+            </div>
+            
+            <div class="boarding-pass" id="boardingPassPreview">
+                <!-- Preview will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const { jsPDF } = window.jspdf;
+            
+            // Set default date to today
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('departureDate').value = formattedDate;
+            
+            // Set default times
+            document.getElementById('departureTime').value = '14:30';
+            document.getElementById('boardingTime').value = '13:45';
+            
+            // Airport data
+            const airports = {
+                'JED': { city: 'JEDDAH', name: 'King Abdulaziz International' },
+                'RUH': { city: 'RIYADH', name: 'King Khalid International' },
+                'DMM': { city: 'DAMMAM', name: 'King Fahd International' },
+                'MED': { city: 'MEDINA', name: 'Prince Mohammad Bin Abdulaziz' },
+                'DEL': { city: 'DELHI', name: 'Indira Gandhi International' },
+                'BOM': { city: 'MUMBAI', name: 'Chhatrapati Shivaji International' },
+                'BLR': { city: 'BANGALORE', name: 'Kempegowda International' },
+                'MAA': { city: 'CHENNAI', name: 'Chennai International' }
+            };
+            
+            // Airline data
+            const airlines = {
+                'SV': { name: 'SAUDIA', code: 'SV' },
+                'XY': { name: 'FLYNAS', code: 'XY' },
+                '6E': { name: 'INDIGO', code: '6E' },
+                'AI': { name: 'AIR INDIA', code: 'AI' }
+            };
+            
+            // Generate QR Code
+            function generateQRCode(text, elementId) {
+                const typeNumber = 0;
+                const errorCorrectionLevel = 'L';
+                const qr = qrcode(typeNumber, errorCorrectionLevel);
+                qr.addData(text);
+                qr.make();
+                
+                const qrElement = document.getElementById(elementId);
+                qrElement.innerHTML = qr.createImgTag(4);
+            }
+            
+            // Format date for display
+            function formatDate(dateStr) {
+                const date = new Date(dateStr);
+                const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+                return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+            }
+            
+            // Format time for display
+            function formatTime(timeStr) {
+                const [hours, minutes] = timeStr.split(':');
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour % 12 || 12;
+                return `${displayHour}:${minutes} ${ampm}`;
+            }
+            
+            // Generate boarding pass preview
+            function generateBoardingPassPreview() {
+                const departure = document.getElementById('departure').value;
+                const arrival = document.getElementById('arrival').value;
+                const airline = document.getElementById('airline').value;
+                const flightNumber = document.getElementById('flightNumber').value;
+                const departureDate = document.getElementById('departureDate').value;
+                const departureTime = document.getElementById('departureTime').value;
+                const passengerName = document.getElementById('passengerName').value;
+                const seatNumber = document.getElementById('seatNumber').value;
+                const gate = document.getElementById('gate').value;
+                const boardingTime = document.getElementById('boardingTime').value;
+                
+                if (!departure || !arrival || !airline || !flightNumber) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                const airlineInfo = airlines[airline];
+                const departureInfo = airports[departure];
+                const arrivalInfo = airports[arrival];
+                
+                // Generate barcode data
+                const barcodeData = `M1${passengerName.toUpperCase().replace(/ /g, '/')} ${airlineInfo.code}${flightNumber} ${seatNumber} ${departure}${arrival}`;
+                
+                const previewHTML = `
+                    <div class="pass-header">
+                        <div class="airline-logo">${airlineInfo.name}</div>
+                        <div>BOARDING PASS</div>
+                    </div>
+                    <div class="pass-content">
+                        <div class="flight-info">
+                            <div class="airport">
+                                <div class="airport-code">${departure}</div>
+                                <div>${departureInfo.city}</div>
+                                <div class="detail-label">DEPARTURE</div>
+                            </div>
+                            <div style="text-align: center; padding-top: 20px;">
+                                <div style="font-size: 24px;">→</div>
+                                <div class="detail-label">${airlineInfo.code}${flightNumber}</div>
+                            </div>
+                            <div class="airport">
+                                <div class="airport-code">${arrival}</div>
+                                <div>${arrivalInfo.city}</div>
+                                <div class="detail-label">ARRIVAL</div>
+                            </div>
+                        </div>
+                        
+                        <div class="passenger-info">
+                            <div class="detail-label">PASSENGER</div>
+                            <div style="font-size: 18px; font-weight: bold;">${passengerName.toUpperCase()}</div>
+                        </div>
+                        
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">DATE</div>
+                                <div class="detail-value">${formatDate(departureDate)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">FLIGHT</div>
+                                <div class="detail-value">${airlineInfo.code}${flightNumber}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">SEAT</div>
+                                <div class="detail-value">${seatNumber}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">DEPARTS</div>
+                                <div class="detail-value">${formatTime(departureTime)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">GATE</div>
+                                <div class="detail-value">${gate}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">BOARDS</div>
+                                <div class="detail-value">${formatTime(boardingTime)}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="barcode-section">
+                            <div id="qrcode"></div>
+                            <div style="color: #333; margin-top: 10px; font-family: monospace;">${barcodeData}</div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('boardingPassPreview').innerHTML = previewHTML;
+                document.getElementById('previewSection').style.display = 'block';
+                
+                // Generate QR code
+                generateQRCode(barcodeData, 'qrcode');
+            }
+            
+            // Generate PDF
+            function generatePDF() {
+                const departure = document.getElementById('departure').value;
+                const arrival = document.getElementById('arrival').value;
+                const airline = document.getElementById('airline').value;
+                const flightNumber = document.getElementById('flightNumber').value;
+                const departureDate = document.getElementById('departureDate').value;
+                const departureTime = document.getElementById('departureTime').value;
+                const passengerName = document.getElementById('passengerName').value;
+                const seatNumber = document.getElementById('seatNumber').value;
+                const gate = document.getElementById('gate').value;
+                const boardingTime = document.getElementById('boardingTime').value;
+                
+                if (!departure || !arrival || !airline || !flightNumber) {
+                    alert('Please fill in all required fields first');
+                    return;
+                }
+                
+                const airlineInfo = airlines[airline];
+                const departureInfo = airports[departure];
+                const arrivalInfo = airports[arrival];
+                
+                // Create PDF
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: [85, 54] // Standard boarding pass size
+                });
+                
+                // Background
+                doc.setFillColor(0, 90, 160);
+                doc.rect(0, 0, 85, 54, 'F');
+                
+                // Header
+                doc.setFillColor(44, 62, 80);
+                doc.rect(0, 0, 85, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text(airlineInfo.name, 42.5, 4, { align: 'center' });
+                doc.setFontSize(8);
+                doc.text('BOARDING PASS', 42.5, 7, { align: 'center' });
+                
+                // Flight info
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text(departure, 15, 18);
+                doc.text(arrival, 60, 18);
+                
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text(departureInfo.city, 15, 22);
+                doc.text(arrivalInfo.city, 60, 22);
+                
+                doc.text('DEPARTURE', 15, 25);
+                doc.text('ARRIVAL', 60, 25);
+                
+                // Arrow and flight number
+                doc.setFontSize(12);
+                doc.text('→', 42.5, 20, { align: 'center' });
+                doc.setFontSize(8);
+                doc.text(`${airlineInfo.code}${flightNumber}`, 42.5, 25, { align: 'center' });
+                
+                // Passenger info
+                doc.setFillColor(255, 255, 255, 0.1);
+                doc.roundedRect(5, 28, 75, 8, 1, 1, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(7);
+                doc.text('PASSENGER', 8, 31);
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text(passengerName.toUpperCase(), 8, 35);
+                
+                // Details grid
+                const details = [
+                    { label: 'DATE', value: formatDate(departureDate), x: 5 },
+                    { label: 'FLIGHT', value: `${airlineInfo.code}${flightNumber}`, x: 30 },
+                    { label: 'SEAT', value: seatNumber, x: 55 },
+                    { label: 'DEPARTS', value: formatTime(departureTime), x: 5, y: 45 },
+                    { label: 'GATE', value: gate, x: 30, y: 45 },
+                    { label: 'BOARDS', value: formatTime(boardingTime), x: 55, y: 45 }
+                ];
+                
+                doc.setFontSize(6);
+                doc.setFont(undefined, 'normal');
+                details.forEach(detail => {
+                    doc.text(detail.label, detail.x, detail.y || 41);
+                    doc.setFontSize(8);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(detail.value, detail.x, (detail.y || 41) + 4);
+                    doc.setFontSize(6);
+                    doc.setFont(undefined, 'normal');
+                });
+                
+                // Footer with barcode data
+                doc.setDrawColor(255, 255, 255);
+                doc.setFillColor(255, 255, 255);
+                doc.rect(0, 49, 85, 5, 'F');
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(5);
+                doc.setFont('courier', 'normal');
+                
+                const barcodeData = `M1${passengerName.toUpperCase().replace(/ /g, '/')} ${airlineInfo.code}${flightNumber} ${seatNumber}`;
+                doc.text(barcodeData, 42.5, 51.5, { align: 'center' });
+                
+                // Save PDF
+                doc.save(`boarding-pass-${flightNumber}-${passengerName.replace(/ /g, '-')}.pdf`);
+            }
+            
+            // Event listeners
+            document.getElementById('previewBtn').addEventListener('click', generateBoardingPassPreview);
+            document.getElementById('generatePdfBtn').addEventListener('click', generatePDF);
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                document.getElementById('previewSection').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
