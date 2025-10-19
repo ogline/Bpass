@@ -1,0 +1,13 @@
+{
+  "name": "pdf-boarding-pass",
+  "version": "1.0.0",
+  "description": "PDF boarding pass generator",
+  "main": "pdf-boarding-pass.js",
+  "scripts": {
+    "start": "node pdf-boarding-pass.js"
+  },
+  "dependencies": {
+    "pdfkit": "^0.13.0",
+    "qrcode": "^1.5.1"
+  }
+}
